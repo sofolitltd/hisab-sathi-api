@@ -1,9 +1,9 @@
 # বাকির খাতা — API ও ওয়েবসাইট
 
-[বাকির খাতা](https://github.com/sofolitltd/baki-khata) অ্যাপের সার্ভার: Go + Gin + Neon Postgres। `/` পেজে ল্যান্ডিং সাইট (Tailwind) চলে।
+[বাকির খাতা](https://github.com/sofolitltd/baki-khata-app) অ্যাপের সার্ভার: Go + Gin + Neon Postgres। `/` পেজে ল্যান্ডিং সাইট (Tailwind) চলে।
 
 - লাইভ: https://baki-khata-api-silk.vercel.app
-- অ্যাপ: [sofolitltd/baki-khata](https://github.com/sofolitltd/baki-khata)
+- অ্যাপ: [sofolitltd/baki-khata-app](https://github.com/sofolitltd/baki-khata-app)
 
 ## এন্ডপয়েন্ট
 | | |

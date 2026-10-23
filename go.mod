@@ -1,4 +1,4 @@
-module baki_khata_api
+module baki-khata-api
 
 go 1.27.2
 

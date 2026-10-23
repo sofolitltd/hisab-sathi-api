@@ -6,3 +6,4 @@ node_modules/
 server.log
 baki_khata_api
 .env*
+baki-khata-api
