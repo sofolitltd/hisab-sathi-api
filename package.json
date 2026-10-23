@@ -2,5 +2,12 @@
   "dependencies": {
     "@neon/config": "^1.9.3",
     "@neon/env": "^1.6.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "tailwindcss": "^4.3.3"
+  },
+  "scripts": {
+    "landing": "tailwindcss -i landing/input.css -o landing/app.css --minify"
   }
 }

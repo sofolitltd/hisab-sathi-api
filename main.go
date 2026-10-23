@@ -39,6 +39,7 @@ func main() {
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 10<<20)
 	})
 
+	registerLanding(r)
 	r.GET("/health", func(c *gin.Context) {
 		if err := db.Ping(c); err != nil {
 			c.JSON(http.StatusServiceUnavailable, gin.H{"status": "db down"})
