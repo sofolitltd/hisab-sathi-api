@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS customers (
   seq bigint NOT NULL DEFAULT nextval('sync_seq'),
   PRIMARY KEY (user_id, uid)
 );
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS photo text NOT NULL DEFAULT '';
 CREATE INDEX IF NOT EXISTS idx_customers_seq ON customers(user_id, seq);
 
 CREATE TABLE IF NOT EXISTS entries (

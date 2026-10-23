@@ -1,11 +1,17 @@
 package main
 
 import (
+	"errors"
+	"github.com/jackc/pgx/v5/pgconn"
+	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
+
+// maxPhotoLen কম্প্রেস করা ছবির (base64 data URI) সর্বোচ্চ দৈর্ঘ্য।
+const maxPhotoLen = 300 << 10
 
 type customerDTO struct {
 	UID        string `json:"uid"`
@@ -13,6 +19,7 @@ type customerDTO struct {
 	Name       string `json:"name"`
 	Phone      string `json:"phone"`
 	Address    string `json:"address"`
+	Photo      string `json:"photo"`
 	DueDate    *int64 `json:"due_date"`
 	ReminderAt *int64 `json:"reminder_at"`
 	CreatedAt  int64  `json:"created_at"`
@@ -60,17 +67,28 @@ func (s *server) push(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "কাস্টমারের তথ্য ভুল"})
 			return
 		}
+		if len(r.Photo) > maxPhotoLen {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "ছবি অনেক বড়"})
+			return
+		}
 		_, err = tx.Exec(c, `
-			INSERT INTO customers (user_id, uid, ledger, name, phone, address, due_date, reminder_at, created_at, updated_at, deleted)
-			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+			INSERT INTO customers (user_id, uid, ledger, name, phone, address, photo, due_date, reminder_at, created_at, updated_at, deleted)
+			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
 			ON CONFLICT (user_id, uid) DO UPDATE SET
 			  ledger = EXCLUDED.ledger, name = EXCLUDED.name, phone = EXCLUDED.phone,
-			  address = EXCLUDED.address, due_date = EXCLUDED.due_date,
+			  address = EXCLUDED.address, photo = EXCLUDED.photo, due_date = EXCLUDED.due_date,
 			  reminder_at = EXCLUDED.reminder_at, updated_at = EXCLUDED.updated_at,
 			  deleted = EXCLUDED.deleted, seq = nextval('sync_seq')
 			WHERE customers.updated_at <= EXCLUDED.updated_at`,
-			user, r.UID, r.Ledger, r.Name, r.Phone, r.Address, r.DueDate, r.ReminderAt, r.CreatedAt, r.UpdatedAt, r.Deleted)
+			user, r.UID, r.Ledger, r.Name, r.Phone, r.Address, r.Photo, r.DueDate, r.ReminderAt, r.CreatedAt, r.UpdatedAt, r.Deleted)
 		if err != nil {
+			log.Println("push:", err)
+			var pg *pgconn.PgError
+			if errors.As(err, &pg) && pg.Code == "23503" {
+				// টোকেনের ইউজার ডাটাবেসে নেই (যেমন ডাটাবেস রিসেট) — আবার লগইন করাতে হবে।
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "আবার লগইন করুন"})
+				return
+			}
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "সার্ভারে সমস্যা"})
 			return
 		}
@@ -90,6 +108,13 @@ func (s *server) push(c *gin.Context) {
 			WHERE entries.updated_at <= EXCLUDED.updated_at`,
 			user, r.UID, r.CustomerUID, r.Type, r.Amount, r.Date, r.Note, r.UpdatedAt, r.Deleted)
 		if err != nil {
+			log.Println("push:", err)
+			var pg *pgconn.PgError
+			if errors.As(err, &pg) && pg.Code == "23503" {
+				// টোকেনের ইউজার ডাটাবেসে নেই (যেমন ডাটাবেস রিসেট) — আবার লগইন করাতে হবে।
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "আবার লগইন করুন"})
+				return
+			}
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "সার্ভারে সমস্যা"})
 			return
 		}
@@ -109,7 +134,7 @@ func (s *server) pull(c *gin.Context) {
 
 	customers := []customerDTO{}
 	rows, err := s.db.Query(c, `
-		SELECT uid, ledger, name, phone, address, due_date, reminder_at, created_at, updated_at, deleted, seq
+		SELECT uid, ledger, name, phone, address, photo, due_date, reminder_at, created_at, updated_at, deleted, seq
 		FROM customers WHERE user_id = $1 AND seq > $2 ORDER BY seq`, user, since)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "সার্ভারে সমস্যা"})
@@ -118,7 +143,7 @@ func (s *server) pull(c *gin.Context) {
 	for rows.Next() {
 		var r customerDTO
 		var seq int64
-		if err := rows.Scan(&r.UID, &r.Ledger, &r.Name, &r.Phone, &r.Address, &r.DueDate, &r.ReminderAt,
+		if err := rows.Scan(&r.UID, &r.Ledger, &r.Name, &r.Phone, &r.Address, &r.Photo, &r.DueDate, &r.ReminderAt,
 			&r.CreatedAt, &r.UpdatedAt, &r.Deleted, &seq); err != nil {
 			rows.Close()
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "সার্ভারে সমস্যা"})
