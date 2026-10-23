@@ -1,0 +1,7 @@
+.env
+.env.*
+.neon
+.vercel
+node_modules/
+server.log
+baki_khata_api

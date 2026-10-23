@@ -1,0 +1,10 @@
+.env
+.env.*
+.neon
+node_modules
+server.log
+baki_khata_api
+Makefile
+neon.ts
+package.json
+package-lock.json
