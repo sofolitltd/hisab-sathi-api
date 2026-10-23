@@ -22,6 +22,7 @@
       </a>
       <nav class="hidden items-center gap-7 text-sm font-medium text-slate-600 sm:flex">
         <a href="#features" class="hover:text-brand-600">সুবিধা</a>
+        <a href="#screens" class="hover:text-brand-600">স্ক্রিন</a>
         <a href="#how" class="hover:text-brand-600">কীভাবে কাজ করে</a>
         <a href="#download" class="rounded-full bg-brand-600 px-4 py-2 text-white hover:bg-brand-700">ডাউনলোড</a>
       </nav>
@@ -55,87 +56,91 @@
         </div>
       </div>
 
-      <!-- Phone mock -->
-      <div class="mx-auto w-full max-w-[300px]" aria-hidden="true">
-        <div class="rounded-[2.5rem] border-[10px] border-slate-900 bg-[#f4f7f6] p-3 shadow-2xl shadow-brand-900/20">
-          <div class="flex items-center gap-2">
-            <img src="/assets/logo.png" alt="" class="size-11 rounded-xl" width="44" height="44">
-            <div class="grid flex-1 grid-cols-2 overflow-hidden rounded-2xl border border-slate-200 bg-white text-center text-[11px]">
-              <div class="py-1.5"><div class="text-slate-500">পাওনা</div><div class="text-base font-bold text-brand-600">৳ ১২,৫০০</div></div>
-              <div class="bg-indigo-700 py-1.5 text-white"><div class="opacity-80">দেনা</div><div class="text-base font-bold">৳ ৩,২০০</div></div>
-            </div>
-          </div>
-          <div class="mt-4 text-lg font-bold">পাওনাদার</div>
-          <div class="mt-2 space-y-2">
-            <div class="flex items-center justify-between rounded-2xl bg-white p-3 shadow-sm">
-              <div><div class="text-sm font-semibold">রহিম স্টোর</div><div class="text-[11px] text-red-600">২ দিন পার হয়েছে</div></div>
-              <div class="text-sm font-bold text-baki">৳ ৪,৫০০</div>
-            </div>
-            <div class="flex items-center justify-between rounded-2xl bg-white p-3 shadow-sm">
-              <div><div class="text-sm font-semibold">করিম ভাই</div><div class="text-[11px] text-amber-600">আজ আদায়ের দিন</div></div>
-              <div class="text-sm font-bold text-baki">৳ ২,০০০</div>
-            </div>
-            <div class="flex items-center justify-between rounded-2xl bg-white p-3 shadow-sm">
-              <div><div class="text-sm font-semibold">সালমা বেগম</div><div class="text-[11px] text-slate-500">৫ দিন পর</div></div>
-              <div class="text-sm font-bold text-baki">৳ ৬,০০০</div>
-            </div>
-          </div>
-          <div class="mt-4 flex justify-end">
-            <div class="rounded-2xl bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white shadow-lg">+ নতুন পাওনাদার</div>
-          </div>
+      <!-- Phone -->
+      <div class="mx-auto w-full max-w-[250px] sm:max-w-[280px]">
+        <div class="overflow-hidden rounded-[2.4rem] border-[8px] border-slate-900 bg-slate-900 shadow-2xl shadow-brand-900/25">
+          <img src="/assets/shots/home.jpg" alt="বাকির খাতা অ্যাপের হোম স্ক্রিন" width="1080" height="2400"
+               class="block aspect-[9/20] w-full object-cover" fetchpriority="high">
         </div>
-        <p class="mt-3 text-center text-xs text-slate-400">নমুনা চিত্র</p>
+      </div>
+    </section>
+
+    <!-- Screens -->
+    <section id="screens" class="bg-white py-16 md:py-20">
+      <div class="mx-auto max-w-6xl px-4">
+        <h2 class="text-3xl font-extrabold text-brand-900">অ্যাপের ভেতরে</h2>
+        <p class="mt-2 max-w-2xl text-slate-600">অ্যাপ থেকে নেওয়া আসল স্ক্রিন। নাম ও অঙ্কগুলো নমুনা।</p>
+        <div class="mx-auto mt-10 grid max-w-3xl grid-cols-2 gap-5 sm:grid-cols-3">
+          <figure>
+            <div class="overflow-hidden rounded-[1.8rem] border-[6px] border-slate-900 bg-slate-900 shadow-lg">
+              <img src="/assets/shots/customers.jpg" alt="কাস্টমারের তালিকা" width="1080" height="2400" loading="lazy" class="block aspect-[9/20] w-full object-cover">
+            </div>
+            <figcaption class="mt-3 text-center text-sm font-semibold text-slate-700">কাস্টমারের তালিকা</figcaption>
+          </figure>
+          <figure>
+            <div class="overflow-hidden rounded-[1.8rem] border-[6px] border-slate-900 bg-slate-900 shadow-lg">
+              <img src="/assets/shots/detail.jpg" alt="কাস্টমারের হিসাব, কল ও তাগাদা SMS" width="1080" height="2400" loading="lazy" class="block aspect-[9/20] w-full object-cover">
+            </div>
+            <figcaption class="mt-3 text-center text-sm font-semibold text-slate-700">হিসাব, কল ও তাগাদা SMS</figcaption>
+          </figure>
+          <figure class="col-span-2 mx-auto w-1/2 sm:col-span-1 sm:w-full">
+            <div class="overflow-hidden rounded-[1.8rem] border-[6px] border-slate-900 bg-slate-900 shadow-lg">
+              <img src="/assets/shots/stats.jpg" alt="পাওনার রিপোর্ট" width="1080" height="2400" loading="lazy" class="block aspect-[9/20] w-full object-cover">
+            </div>
+            <figcaption class="mt-3 text-center text-sm font-semibold text-slate-700">রিপোর্ট ও পরিসংখ্যান</figcaption>
+          </figure>
+        </div>
       </div>
     </section>
 
     <!-- Features -->
-    <section id="features" class="bg-white py-16 md:py-20">
+    <section id="features" class="py-16 md:py-20">
       <div class="mx-auto max-w-6xl px-4">
         <h2 class="text-3xl font-extrabold text-brand-900">যা যা পাবেন</h2>
         <p class="mt-2 max-w-2xl text-slate-600">দোকানির দৈনন্দিন বাকির হিসাবের জন্য দরকারি সবকিছু, সহজ বাংলায়।</p>
 
         <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          <article class="rounded-3xl border border-brand-100 bg-brand-50/50 p-6">
+          <article class="rounded-3xl border border-brand-100 bg-white p-6">
             <div class="mb-4 grid size-11 place-items-center rounded-2xl bg-brand-600 text-xl text-white">⇅</div>
             <h3 class="text-lg font-bold">পাওনা ও দেনা আলাদা খাতা</h3>
             <p class="mt-1.5 text-slate-600">কার কাছে পাবেন আর কাকে দিতে হবে, দুটো আলাদা খাতায় আলাদা হিসাব। মোট অঙ্ক হোমেই দেখা যায়।</p>
           </article>
-          <article class="rounded-3xl border border-brand-100 bg-brand-50/50 p-6">
+          <article class="rounded-3xl border border-brand-100 bg-white p-6">
             <div class="mb-4 grid size-11 place-items-center rounded-2xl bg-brand-600 text-xl text-white">৳</div>
             <h3 class="text-lg font-bold">বাকি ও জমার লেনদেন</h3>
             <p class="mt-1.5 text-slate-600">প্রতিজনের বাকি আর জমা লিখুন, নোট যোগ করুন। বর্তমান বাকি নিজে থেকেই হিসাব হয়।</p>
           </article>
-          <article class="rounded-3xl border border-brand-100 bg-brand-50/50 p-6">
+          <article class="rounded-3xl border border-brand-100 bg-white p-6">
             <div class="mb-4 grid size-11 place-items-center rounded-2xl bg-brand-600 text-xl text-white">🔔</div>
             <h3 class="text-lg font-bold">মেয়াদ ও রিমাইন্ডার</h3>
             <p class="mt-1.5 text-slate-600">আদায়ের তারিখ আর সময় ঠিক করুন, ঠিক সময়ে নোটিফিকেশন পাবেন। প্রতিদিন সকাল ৯টায় সারাংশও আসে।</p>
           </article>
-          <article class="rounded-3xl border border-brand-100 bg-brand-50/50 p-6">
+          <article class="rounded-3xl border border-brand-100 bg-white p-6">
             <div class="mb-4 grid size-11 place-items-center rounded-2xl bg-brand-600 text-xl text-white">☎</div>
             <h3 class="text-lg font-bold">এক ট্যাপে কল ও এসএমএস</h3>
             <p class="mt-1.5 text-slate-600">কাস্টমারের পাতা থেকেই সরাসরি কল করুন, বা বাকির অঙ্কসহ তৈরি মেসেজ পাঠিয়ে তাগাদা দিন।</p>
           </article>
-          <article class="rounded-3xl border border-brand-100 bg-brand-50/50 p-6">
+          <article class="rounded-3xl border border-brand-100 bg-white p-6">
             <div class="mb-4 grid size-11 place-items-center rounded-2xl bg-brand-600 text-xl text-white">▥</div>
             <h3 class="text-lg font-bold">রিপোর্ট ও পরিসংখ্যান</h3>
             <p class="mt-1.5 text-slate-600">কতজনের মেয়াদ পার, কতজনের আজ আদায়ের দিন, একনজরে দেখুন।</p>
           </article>
-          <article class="rounded-3xl border border-brand-100 bg-brand-50/50 p-6">
+          <article class="rounded-3xl border border-brand-100 bg-white p-6">
             <div class="mb-4 grid size-11 place-items-center rounded-2xl bg-brand-600 text-xl text-white">☁</div>
             <h3 class="text-lg font-bold">অফলাইনে চলে, অনলাইনে ব্যাকআপ</h3>
             <p class="mt-1.5 text-slate-600">ইন্টারনেট ছাড়াই সব কাজ চলে। ইন্টারনেট এলে নিজে থেকে সার্ভারে ব্যাকআপ ও সিঙ্ক হয়, সর্বশেষ সিঙ্কের সময়ও দেখা যায়।</p>
           </article>
-          <article class="rounded-3xl border border-brand-100 bg-brand-50/50 p-6">
+          <article class="rounded-3xl border border-brand-100 bg-white p-6">
             <div class="mb-4 grid size-11 place-items-center rounded-2xl bg-brand-600 text-xl text-white">⚿</div>
             <h3 class="text-lg font-bold">ফোন নাম্বার ও PIN দিয়ে লগইন</h3>
             <p class="mt-1.5 text-slate-600">বিকাশের মতো ৫ ডিজিটের PIN। PIN সার্ভারে সাধারণ লেখায় থাকে না, অনেকবার ভুল দিলে সাময়িক লক হয়ে যায়।</p>
           </article>
-          <article class="rounded-3xl border border-brand-100 bg-brand-50/50 p-6">
+          <article class="rounded-3xl border border-brand-100 bg-white p-6">
             <div class="mb-4 grid size-11 place-items-center rounded-2xl bg-brand-600 text-xl text-white">☺</div>
             <h3 class="text-lg font-bold">কন্টাক্ট থেকে যোগ</h3>
             <p class="mt-1.5 text-slate-600">ফোনের কন্টাক্ট লিস্ট থেকে নাম ও নাম্বার বেছে নিয়ে নতুন কাস্টমার যোগ করুন, টাইপ করার ঝামেলা নেই।</p>
           </article>
-          <article class="rounded-3xl border border-brand-100 bg-brand-50/50 p-6">
+          <article class="rounded-3xl border border-brand-100 bg-white p-6">
             <div class="mb-4 grid size-11 place-items-center rounded-2xl bg-brand-600 text-xl text-white">অ</div>
             <h3 class="text-lg font-bold">পুরোটাই বাংলায়</h3>
             <p class="mt-1.5 text-slate-600">বাংলা সংখ্যা ও বাংলা লেখা, সঙ্গে আলো ও অন্ধকার দুই থিম।</p>
@@ -145,26 +150,26 @@
     </section>
 
     <!-- How -->
-    <section id="how" class="mx-auto max-w-6xl px-4 py-16 md:py-20">
+    <section id="how" class="bg-white py-16 md:py-20"><div class="mx-auto max-w-6xl px-4">
       <h2 class="text-3xl font-extrabold text-brand-900">কীভাবে কাজ করে</h2>
       <ol class="mt-10 grid gap-5 md:grid-cols-3">
-        <li class="rounded-3xl bg-white p-6 shadow-sm">
+        <li class="rounded-3xl border border-brand-100 bg-brand-50/50 p-6">
           <span class="grid size-10 place-items-center rounded-full bg-brand-600 font-bold text-white">১</span>
           <h3 class="mt-4 text-lg font-bold">অ্যাকাউন্ট খুলুন</h3>
           <p class="mt-1.5 text-slate-600">নাম, ফোন নাম্বার আর ৫ ডিজিটের PIN দিন।</p>
         </li>
-        <li class="rounded-3xl bg-white p-6 shadow-sm">
+        <li class="rounded-3xl border border-brand-100 bg-brand-50/50 p-6">
           <span class="grid size-10 place-items-center rounded-full bg-brand-600 font-bold text-white">২</span>
           <h3 class="mt-4 text-lg font-bold">বাকি লিখুন</h3>
           <p class="mt-1.5 text-slate-600">কাস্টমার যোগ করে বাকি বা জমা লিখুন, আদায়ের তারিখ ঠিক করুন।</p>
         </li>
-        <li class="rounded-3xl bg-white p-6 shadow-sm">
+        <li class="rounded-3xl border border-brand-100 bg-brand-50/50 p-6">
           <span class="grid size-10 place-items-center rounded-full bg-brand-600 font-bold text-white">৩</span>
           <h3 class="mt-4 text-lg font-bold">সময়মতো আদায় করুন</h3>
           <p class="mt-1.5 text-slate-600">নোটিফিকেশন পেয়ে কল বা এসএমএস করুন। হিসাব নিজে থেকে মিলে যায়।</p>
         </li>
       </ol>
-    </section>
+    </div></section>
 
     <!-- Download -->
     <section id="download" class="px-4 pb-20">
