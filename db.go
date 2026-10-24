@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS customers (
 );
 ALTER TABLE customers ADD COLUMN IF NOT EXISTS photo text NOT NULL DEFAULT '';
 ALTER TABLE customers ADD COLUMN IF NOT EXISTS extra_phones text NOT NULL DEFAULT '';
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS plan text NOT NULL DEFAULT '';
 CREATE INDEX IF NOT EXISTS idx_customers_seq ON customers(user_id, seq);
 
 CREATE TABLE IF NOT EXISTS entries (

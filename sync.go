@@ -20,13 +20,15 @@ type customerDTO struct {
 	Phone  string `json:"phone"`
 	// পুরোনো অ্যাপ এটা পাঠায় না (nil) — তখন আগের মানই থাকে।
 	ExtraPhones *string `json:"extra_phones"`
-	Address     string  `json:"address"`
-	Photo       string  `json:"photo"`
-	DueDate     *int64  `json:"due_date"`
-	ReminderAt  *int64  `json:"reminder_at"`
-	CreatedAt   int64   `json:"created_at"`
-	UpdatedAt   int64   `json:"updated_at"`
-	Deleted     bool    `json:"deleted"`
+	// কিস্তির পরিকল্পনা (JSON লেখা, ফাঁকা = নেই); পুরোনো অ্যাপ পাঠায় না (nil)।
+	Plan       *string `json:"plan"`
+	Address    string  `json:"address"`
+	Photo      string  `json:"photo"`
+	DueDate    *int64  `json:"due_date"`
+	ReminderAt *int64  `json:"reminder_at"`
+	CreatedAt  int64   `json:"created_at"`
+	UpdatedAt  int64   `json:"updated_at"`
+	Deleted    bool    `json:"deleted"`
 }
 
 type entryDTO struct {
@@ -86,16 +88,17 @@ func (s *server) push(c *gin.Context) {
 			return
 		}
 		_, err = tx.Exec(c, `
-			INSERT INTO customers (user_id, uid, ledger, name, phone, address, photo, due_date, reminder_at, created_at, updated_at, deleted, extra_phones)
-			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,COALESCE($13,''))
+			INSERT INTO customers (user_id, uid, ledger, name, phone, address, photo, due_date, reminder_at, created_at, updated_at, deleted, extra_phones, plan)
+			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,COALESCE($13,''),COALESCE($14,''))
 			ON CONFLICT (user_id, uid) DO UPDATE SET
 			  ledger = EXCLUDED.ledger, name = EXCLUDED.name, phone = EXCLUDED.phone,
 			  extra_phones = COALESCE($13, customers.extra_phones),
+			  plan = COALESCE($14, customers.plan),
 			  address = EXCLUDED.address, photo = EXCLUDED.photo, due_date = EXCLUDED.due_date,
 			  reminder_at = EXCLUDED.reminder_at, updated_at = EXCLUDED.updated_at,
 			  deleted = EXCLUDED.deleted, seq = nextval('sync_seq')
 			WHERE customers.updated_at <= EXCLUDED.updated_at`,
-			user, r.UID, r.Ledger, r.Name, r.Phone, r.Address, r.Photo, r.DueDate, r.ReminderAt, r.CreatedAt, r.UpdatedAt, r.Deleted, r.ExtraPhones)
+			user, r.UID, r.Ledger, r.Name, r.Phone, r.Address, r.Photo, r.DueDate, r.ReminderAt, r.CreatedAt, r.UpdatedAt, r.Deleted, r.ExtraPhones, r.Plan)
 		if err != nil {
 			log.Println("push:", err)
 			var pg *pgconn.PgError
@@ -175,7 +178,7 @@ func (s *server) pull(c *gin.Context) {
 
 	customers := []customerDTO{}
 	rows, err := s.db.Query(c, `
-		SELECT uid, ledger, name, phone, extra_phones, address, photo, due_date, reminder_at, created_at, updated_at, deleted, seq
+		SELECT uid, ledger, name, phone, extra_phones, plan, address, photo, due_date, reminder_at, created_at, updated_at, deleted, seq
 		FROM customers WHERE user_id = $1 AND seq > $2 ORDER BY seq`, user, since)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "সার্ভারে সমস্যা"})
@@ -184,7 +187,7 @@ func (s *server) pull(c *gin.Context) {
 	for rows.Next() {
 		var r customerDTO
 		var seq int64
-		if err := rows.Scan(&r.UID, &r.Ledger, &r.Name, &r.Phone, &r.ExtraPhones, &r.Address, &r.Photo, &r.DueDate, &r.ReminderAt,
+		if err := rows.Scan(&r.UID, &r.Ledger, &r.Name, &r.Phone, &r.ExtraPhones, &r.Plan, &r.Address, &r.Photo, &r.DueDate, &r.ReminderAt,
 			&r.CreatedAt, &r.UpdatedAt, &r.Deleted, &seq); err != nil {
 			rows.Close()
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "সার্ভারে সমস্যা"})
