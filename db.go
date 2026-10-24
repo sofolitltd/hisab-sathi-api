@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS customers (
   PRIMARY KEY (user_id, uid)
 );
 ALTER TABLE customers ADD COLUMN IF NOT EXISTS photo text NOT NULL DEFAULT '';
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS extra_phones text NOT NULL DEFAULT '';
 CREATE INDEX IF NOT EXISTS idx_customers_seq ON customers(user_id, seq);
 
 CREATE TABLE IF NOT EXISTS entries (
@@ -70,6 +71,20 @@ CREATE TABLE IF NOT EXISTS entries (
   PRIMARY KEY (user_id, uid)
 );
 CREATE INDEX IF NOT EXISTS idx_entries_seq ON entries(user_id, seq);
+
+CREATE TABLE IF NOT EXISTS contact_logs (
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  uid text NOT NULL,
+  customer_uid text NOT NULL,
+  kind text NOT NULL,
+  note text NOT NULL DEFAULT '',
+  at bigint NOT NULL,
+  updated_at bigint NOT NULL,
+  deleted boolean NOT NULL DEFAULT false,
+  seq bigint NOT NULL DEFAULT nextval('sync_seq'),
+  PRIMARY KEY (user_id, uid)
+);
+CREATE INDEX IF NOT EXISTS idx_contact_logs_seq ON contact_logs(user_id, seq);
 `
 
 // openDB Neon-এর পুল করা কানেকশনে (pgbouncer) চলার জন্য simple protocol ব্যবহার করে।

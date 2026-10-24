@@ -14,17 +14,19 @@ import (
 const maxPhotoLen = 300 << 10
 
 type customerDTO struct {
-	UID        string `json:"uid"`
-	Ledger     string `json:"ledger"`
-	Name       string `json:"name"`
-	Phone      string `json:"phone"`
-	Address    string `json:"address"`
-	Photo      string `json:"photo"`
-	DueDate    *int64 `json:"due_date"`
-	ReminderAt *int64 `json:"reminder_at"`
-	CreatedAt  int64  `json:"created_at"`
-	UpdatedAt  int64  `json:"updated_at"`
-	Deleted    bool   `json:"deleted"`
+	UID    string `json:"uid"`
+	Ledger string `json:"ledger"`
+	Name   string `json:"name"`
+	Phone  string `json:"phone"`
+	// পুরোনো অ্যাপ এটা পাঠায় না (nil) — তখন আগের মানই থাকে।
+	ExtraPhones *string `json:"extra_phones"`
+	Address     string  `json:"address"`
+	Photo       string  `json:"photo"`
+	DueDate     *int64  `json:"due_date"`
+	ReminderAt  *int64  `json:"reminder_at"`
+	CreatedAt   int64   `json:"created_at"`
+	UpdatedAt   int64   `json:"updated_at"`
+	Deleted     bool    `json:"deleted"`
 }
 
 type entryDTO struct {
@@ -38,9 +40,21 @@ type entryDTO struct {
 	Deleted     bool    `json:"deleted"`
 }
 
+// logDTO কাস্টমারকে কবে কল/মেসেজ/তাগাদা দেওয়া হয়েছিল।
+type logDTO struct {
+	UID         string `json:"uid"`
+	CustomerUID string `json:"customer_uid"`
+	Kind        string `json:"kind"`
+	Note        string `json:"note"`
+	At          int64  `json:"at"`
+	UpdatedAt   int64  `json:"updated_at"`
+	Deleted     bool   `json:"deleted"`
+}
+
 type pushBody struct {
 	Customers []customerDTO `json:"customers"`
 	Entries   []entryDTO    `json:"entries"`
+	Logs      []logDTO      `json:"logs"`
 }
 
 // push: ক্লায়েন্টের নতুন/বদলানো রেকর্ড নেয়। একই uid-তে নতুন updated_at-ওয়ালা জেতে।
@@ -50,7 +64,7 @@ func (s *server) push(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ভুল অনুরোধ"})
 		return
 	}
-	if len(in.Customers)+len(in.Entries) > 5000 {
+	if len(in.Customers)+len(in.Entries)+len(in.Logs) > 5000 {
 		c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "একবারে অনেক বেশি রেকর্ড"})
 		return
 	}
@@ -72,15 +86,16 @@ func (s *server) push(c *gin.Context) {
 			return
 		}
 		_, err = tx.Exec(c, `
-			INSERT INTO customers (user_id, uid, ledger, name, phone, address, photo, due_date, reminder_at, created_at, updated_at, deleted)
-			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+			INSERT INTO customers (user_id, uid, ledger, name, phone, address, photo, due_date, reminder_at, created_at, updated_at, deleted, extra_phones)
+			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,COALESCE($13,''))
 			ON CONFLICT (user_id, uid) DO UPDATE SET
 			  ledger = EXCLUDED.ledger, name = EXCLUDED.name, phone = EXCLUDED.phone,
+			  extra_phones = COALESCE($13, customers.extra_phones),
 			  address = EXCLUDED.address, photo = EXCLUDED.photo, due_date = EXCLUDED.due_date,
 			  reminder_at = EXCLUDED.reminder_at, updated_at = EXCLUDED.updated_at,
 			  deleted = EXCLUDED.deleted, seq = nextval('sync_seq')
 			WHERE customers.updated_at <= EXCLUDED.updated_at`,
-			user, r.UID, r.Ledger, r.Name, r.Phone, r.Address, r.Photo, r.DueDate, r.ReminderAt, r.CreatedAt, r.UpdatedAt, r.Deleted)
+			user, r.UID, r.Ledger, r.Name, r.Phone, r.Address, r.Photo, r.DueDate, r.ReminderAt, r.CreatedAt, r.UpdatedAt, r.Deleted, r.ExtraPhones)
 		if err != nil {
 			log.Println("push:", err)
 			var pg *pgconn.PgError
@@ -119,6 +134,32 @@ func (s *server) push(c *gin.Context) {
 			return
 		}
 	}
+	for _, r := range in.Logs {
+		switch r.Kind {
+		case "call", "sms", "visit", "note":
+		default:
+			c.JSON(http.StatusBadRequest, gin.H{"error": "যোগাযোগের তথ্য ভুল"})
+			return
+		}
+		if r.UID == "" || r.CustomerUID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "যোগাযোগের তথ্য ভুল"})
+			return
+		}
+		_, err = tx.Exec(c, `
+			INSERT INTO contact_logs (user_id, uid, customer_uid, kind, note, at, updated_at, deleted)
+			VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+			ON CONFLICT (user_id, uid) DO UPDATE SET
+			  kind = EXCLUDED.kind, note = EXCLUDED.note, at = EXCLUDED.at,
+			  updated_at = EXCLUDED.updated_at, deleted = EXCLUDED.deleted,
+			  seq = nextval('sync_seq')
+			WHERE contact_logs.updated_at <= EXCLUDED.updated_at`,
+			user, r.UID, r.CustomerUID, r.Kind, r.Note, r.At, r.UpdatedAt, r.Deleted)
+		if err != nil {
+			log.Println("push:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "সার্ভারে সমস্যা"})
+			return
+		}
+	}
 	if err := tx.Commit(c); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "সার্ভারে সমস্যা"})
 		return
@@ -134,7 +175,7 @@ func (s *server) pull(c *gin.Context) {
 
 	customers := []customerDTO{}
 	rows, err := s.db.Query(c, `
-		SELECT uid, ledger, name, phone, address, photo, due_date, reminder_at, created_at, updated_at, deleted, seq
+		SELECT uid, ledger, name, phone, extra_phones, address, photo, due_date, reminder_at, created_at, updated_at, deleted, seq
 		FROM customers WHERE user_id = $1 AND seq > $2 ORDER BY seq`, user, since)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "সার্ভারে সমস্যা"})
@@ -143,7 +184,7 @@ func (s *server) pull(c *gin.Context) {
 	for rows.Next() {
 		var r customerDTO
 		var seq int64
-		if err := rows.Scan(&r.UID, &r.Ledger, &r.Name, &r.Phone, &r.Address, &r.Photo, &r.DueDate, &r.ReminderAt,
+		if err := rows.Scan(&r.UID, &r.Ledger, &r.Name, &r.Phone, &r.ExtraPhones, &r.Address, &r.Photo, &r.DueDate, &r.ReminderAt,
 			&r.CreatedAt, &r.UpdatedAt, &r.Deleted, &seq); err != nil {
 			rows.Close()
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "সার্ভারে সমস্যা"})
@@ -176,5 +217,28 @@ func (s *server) pull(c *gin.Context) {
 	}
 	rows.Close()
 
-	c.JSON(http.StatusOK, gin.H{"customers": customers, "entries": entries, "cursor": cursor})
+	// অ্যাপ এই ঘর দেখেই বোঝে সার্ভার যোগাযোগের ইতিহাস রাখতে পারে
+	logs := []logDTO{}
+	rows, err = s.db.Query(c, `
+		SELECT uid, customer_uid, kind, note, at, updated_at, deleted, seq
+		FROM contact_logs WHERE user_id = $1 AND seq > $2 ORDER BY seq`, user, since)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "সার্ভারে সমস্যা"})
+		return
+	}
+	for rows.Next() {
+		var r logDTO
+		var seq int64
+		if err := rows.Scan(&r.UID, &r.CustomerUID, &r.Kind, &r.Note, &r.At,
+			&r.UpdatedAt, &r.Deleted, &seq); err != nil {
+			rows.Close()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "সার্ভারে সমস্যা"})
+			return
+		}
+		cursor = max(cursor, seq)
+		logs = append(logs, r)
+	}
+	rows.Close()
+
+	c.JSON(http.StatusOK, gin.H{"customers": customers, "entries": entries, "logs": logs, "cursor": cursor})
 }
