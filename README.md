@@ -35,4 +35,4 @@ make landing   # internal/landing/web/app.css আবার বানায় (T
 ```
 
 ## ডিপ্লয়
-`main`-এ push করলে Vercel নিজে ডিপ্লয় করে (`Dockerfile.vercel`, রিজিয়ন `sin1`)।
+`main`-এ push করলে Vercel নিজে ডিপ্লয় করে (`Dockerfile.vercel`, রিজিয়ন `sin1`)। নতুন Vercel প্রজেক্টে `DATABASE_URL` ও `JWT_SECRET` env var সেট না থাকলে ফাংশন ক্র্যাশ করে (`FUNCTION_INVOCATION_FAILED`)।
