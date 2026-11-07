@@ -1,4 +1,5 @@
-package main
+// Package landing ল্যান্ডিং পেজ, তার ছবি/CSS আর APK ডাউনলোডের লিংক দেয়।
+package landing
 
 import (
 	"embed"
@@ -9,15 +10,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// landing/ এর HTML, CSS ও ছবি বাইনারির ভেতরেই থাকে।
+// web/ এর HTML, CSS ও ছবি বাইনারির ভেতরেই থাকে।
 //
-//go:embed landing/index.html landing/app.css landing/logo.png landing/favicon.png landing/shots/*.jpg
-var landingFS embed.FS
+//go:embed web/index.html web/app.css web/logo.png web/favicon.png web/shots/*.jpg
+var webFS embed.FS
 
-const apkURL = "https://github.com/sofolitltd/baki-khata-app/releases/latest/download/baki-khata.apk"
+const apkURL = "https://github.com/sofolitltd/hisab-sathi-app/releases/latest/download/hisab-sathi.apk"
 
-func registerLanding(r *gin.Engine) {
-	sub, _ := fs.Sub(landingFS, "landing")
+// Register `/`, `/download` আর `/assets/*` রুট বসায়।
+func Register(r *gin.Engine) {
+	sub, _ := fs.Sub(webFS, "web")
 	page, _ := fs.ReadFile(sub, "index.html")
 
 	r.GET("/", func(c *gin.Context) {

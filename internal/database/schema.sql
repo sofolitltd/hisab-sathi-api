@@ -1,14 +1,3 @@
-package main
-
-import (
-	"context"
-	"os"
-
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
-)
-
-const schema = `
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE SEQUENCE IF NOT EXISTS sync_seq;
 
@@ -86,22 +75,3 @@ CREATE TABLE IF NOT EXISTS contact_logs (
   PRIMARY KEY (user_id, uid)
 );
 CREATE INDEX IF NOT EXISTS idx_contact_logs_seq ON contact_logs(user_id, seq);
-`
-
-// openDB Neon-এর পুল করা কানেকশনে (pgbouncer) চলার জন্য simple protocol ব্যবহার করে।
-func openDB(ctx context.Context) (*pgxpool.Pool, error) {
-	cfg, err := pgxpool.ParseConfig(os.Getenv("DATABASE_URL"))
-	if err != nil {
-		return nil, err
-	}
-	cfg.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
-	pool, err := pgxpool.NewWithConfig(ctx, cfg)
-	if err != nil {
-		return nil, err
-	}
-	if _, err := pool.Exec(ctx, schema); err != nil {
-		pool.Close()
-		return nil, err
-	}
-	return pool, nil
-}

@@ -1,4 +1,4 @@
-module baki-khata-api
+module hisab-sathi-api
 
 go 1.27.2
 

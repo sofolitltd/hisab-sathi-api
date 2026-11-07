@@ -8,11 +8,13 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
-)
 
-type server struct{ db *pgxpool.Pool }
+	"hisab-sathi-api/internal/auth"
+	"hisab-sathi-api/internal/database"
+	"hisab-sathi-api/internal/datasync"
+	"hisab-sathi-api/internal/landing"
+)
 
 func main() {
 	// .env.local আসে `neon deploy` থেকে (DATABASE_URL), .env তে আমাদের নিজের সেটিংস।
@@ -20,12 +22,11 @@ func main() {
 	if os.Getenv("DATABASE_URL") == "" || os.Getenv("JWT_SECRET") == "" {
 		log.Fatal("DATABASE_URL ও JWT_SECRET দরকার")
 	}
-	db, err := openDB(context.Background())
+	db, err := database.Open(context.Background())
 	if err != nil {
 		log.Fatalf("ডাটাবেস: %v", err)
 	}
 	defer db.Close()
-	s := &server{db: db}
 
 	r := gin.Default()
 	_ = r.SetTrustedProxies(nil)
@@ -39,7 +40,7 @@ func main() {
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 10<<20)
 	})
 
-	registerLanding(r)
+	landing.Register(r)
 	r.GET("/health", func(c *gin.Context) {
 		if err := db.Ping(c); err != nil {
 			c.JSON(http.StatusServiceUnavailable, gin.H{"status": "db down"})
@@ -47,12 +48,8 @@ func main() {
 		}
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
-	r.POST("/auth/register", s.register)
-	r.POST("/auth/login", s.login)
-	r.POST("/auth/change-pin", requireAuth(), s.changePin)
-	api := r.Group("/sync", requireAuth())
-	api.POST("/push", s.push)
-	api.GET("/pull", s.pull)
+	auth.New(db).Register(r)
+	datasync.New(db).Register(r)
 
 	port := os.Getenv("PORT")
 	if port == "" {

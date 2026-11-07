@@ -7,6 +7,6 @@ run:
 	-@lsof -ti tcp:$(PORT) -sTCP:LISTEN | xargs kill 2>/dev/null; sleep 0.5
 	go run .
 
-# landing/app.css বানায় (Tailwind)
+# internal/landing/web/app.css বানায় (Tailwind)
 landing:
 	npm run landing

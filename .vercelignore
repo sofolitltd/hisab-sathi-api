@@ -3,9 +3,9 @@
 .neon
 node_modules
 server.log
-baki_khata_api
+hisab_sathi_api
 Makefile
 neon.ts
 package.json
 package-lock.json
-landing/input.css
+internal/landing/web/input.css

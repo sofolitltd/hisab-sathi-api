@@ -8,6 +8,6 @@
     "tailwindcss": "^4.3.3"
   },
   "scripts": {
-    "landing": "tailwindcss -i landing/input.css -o landing/app.css --minify"
+    "landing": "tailwindcss -i internal/landing/web/input.css -o internal/landing/web/app.css --minify"
   }
 }

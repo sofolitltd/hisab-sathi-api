@@ -1,9 +1,9 @@
-# Baki Khata — API ও ওয়েবসাইট
+# হিসাব সাথী — API ও ওয়েবসাইট
 
-[Baki Khata](https://github.com/sofolitltd/baki-khata-app) অ্যাপের সার্ভার: Go + Gin + Neon Postgres। `/` পেজে ল্যান্ডিং সাইট (Tailwind) চলে।
+[হিসাব সাথী](https://github.com/sofolitltd/hisab-sathi-app) অ্যাপের সার্ভার: Go + Gin + Neon Postgres। `/` পেজে ল্যান্ডিং সাইট (Tailwind) চলে।
 
 - লাইভ: https://bakikhatabd.vercel.app
-- অ্যাপ: [sofolitltd/baki-khata-app](https://github.com/sofolitltd/baki-khata-app)
+- অ্যাপ: [sofolitltd/hisab-sathi-app](https://github.com/sofolitltd/hisab-sathi-app)
 
 ## এন্ডপয়েন্ট
 | | |
@@ -14,13 +14,24 @@
 | `POST /auth/change-pin` | PIN বদল (লগইন লাগে) |
 | `POST /sync/push`, `GET /sync/pull` | সিঙ্ক (লগইন লাগে) |
 
+## কোড সাজানো (feature-first)
+```
+main.go                    রুট আর মিডলওয়্যার জোড়া লাগানো
+internal/
+  database/                Neon কানেকশন + schema.sql (চালু হলেই বসে, idempotent)
+  auth/                    রেজিস্টার, লগইন, PIN বদল, JWT ও RequireAuth
+  datasync/                /sync/push ও /sync/pull, DTO
+  landing/                 ল্যান্ডিং পেজ; web/ এ HTML, CSS, ছবি (বাইনারিতে embed)
+```
+কোনো ফাইল ৩০০ লাইনের বেশি না।
+
 ## পরিবেশ
 `DATABASE_URL` ও `JWT_SECRET` লাগে (`.env`/`.env.local` বা Vercel env vars)। এগুলো কখনো গিটে দেবেন না। `PORT` ঐচ্ছিক (ডিফল্ট ৮০৮০)।
 
 ## চালানো
 ```bash
 make run       # go run . (পোর্টে পুরোনো সার্ভার থাকলে আগে বন্ধ করে)
-make landing   # landing/app.css আবার বানায় (Tailwind)
+make landing   # internal/landing/web/app.css আবার বানায় (Tailwind)
 ```
 
 ## ডিপ্লয়

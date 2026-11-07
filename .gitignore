@@ -4,6 +4,6 @@
 .vercel
 node_modules/
 server.log
-baki_khata_api
+hisab_sathi_api
 .env*
-baki-khata-api
+hisab-sathi-api
