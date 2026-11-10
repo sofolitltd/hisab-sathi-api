@@ -75,3 +75,74 @@ CREATE TABLE IF NOT EXISTS contact_logs (
   PRIMARY KEY (user_id, uid)
 );
 CREATE INDEX IF NOT EXISTS idx_contact_logs_seq ON contact_logs(user_id, seq);
+
+-- ক্রয়-বিক্রয়: প্রোডাক্ট (পণ্য বা মোবাইল ব্যাংকিং/কার্ড কমিশনের ফিক্সড-দাম আইটেম)।
+CREATE TABLE IF NOT EXISTS products (
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  uid text NOT NULL,
+  name text NOT NULL,
+  buy_price double precision NOT NULL DEFAULT 0,
+  sell_price double precision NOT NULL DEFAULT 0,
+  updated_at bigint NOT NULL,
+  deleted boolean NOT NULL DEFAULT false,
+  seq bigint NOT NULL DEFAULT nextval('sync_seq'),
+  PRIMARY KEY (user_id, uid)
+);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS unit text NOT NULL DEFAULT 'piece';
+CREATE INDEX IF NOT EXISTS idx_products_seq ON products(user_id, seq);
+
+-- বিক্রয়: দামের স্ন্যাপশট রাখা হয় যাতে পরে প্রোডাক্টের দাম বদলালেও পুরনো লাভ হিসাব ঠিক থাকে।
+-- customer_uid ফাঁকা থাকতে পারে (কোনো কাস্টমারের সাথে link না করলে)।
+CREATE TABLE IF NOT EXISTS sales (
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  uid text NOT NULL,
+  product_uid text NOT NULL,
+  product_name text NOT NULL DEFAULT '',
+  unit_buy_price double precision NOT NULL DEFAULT 0,
+  unit_sell_price double precision NOT NULL DEFAULT 0,
+  quantity double precision NOT NULL DEFAULT 1,
+  customer_uid text NOT NULL DEFAULT '',
+  received_amount double precision NOT NULL DEFAULT 0,
+  profit double precision,
+  date bigint NOT NULL,
+  note text NOT NULL DEFAULT '',
+  updated_at bigint NOT NULL,
+  deleted boolean NOT NULL DEFAULT false,
+  seq bigint NOT NULL DEFAULT nextval('sync_seq'),
+  PRIMARY KEY (user_id, uid)
+);
+ALTER TABLE sales ADD COLUMN IF NOT EXISTS profit double precision;
+ALTER TABLE sales ADD COLUMN IF NOT EXISTS discount double precision NOT NULL DEFAULT 0;
+CREATE INDEX IF NOT EXISTS idx_sales_seq ON sales(user_id, seq);
+
+-- ক্রয় (রিস্টক): কস্ট রেকর্ড করে, অ্যাপে এটাই পরের বিক্রয়ের buy_price ঠিক করে।
+CREATE TABLE IF NOT EXISTS purchases (
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  uid text NOT NULL,
+  product_uid text NOT NULL,
+  quantity double precision NOT NULL DEFAULT 1,
+  unit_cost double precision NOT NULL DEFAULT 0,
+  date bigint NOT NULL,
+  note text NOT NULL DEFAULT '',
+  updated_at bigint NOT NULL,
+  deleted boolean NOT NULL DEFAULT false,
+  seq bigint NOT NULL DEFAULT nextval('sync_seq'),
+  PRIMARY KEY (user_id, uid)
+);
+CREATE INDEX IF NOT EXISTS idx_purchases_seq ON purchases(user_id, seq);
+
+-- ব্যয়: ক্যাটেগরি-ভিত্তিক সাধারণ ব্যয় (দোকান ভাড়া, খাবার, বাজার ইত্যাদি) — প্রোডাক্ট ক্রয়ের
+-- (purchases) সাথে সম্পর্কহীন, স্বাধীন টেবিল।
+CREATE TABLE IF NOT EXISTS expenses (
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  uid text NOT NULL,
+  category text NOT NULL,
+  amount double precision NOT NULL DEFAULT 0,
+  date bigint NOT NULL,
+  note text NOT NULL DEFAULT '',
+  updated_at bigint NOT NULL,
+  deleted boolean NOT NULL DEFAULT false,
+  seq bigint NOT NULL DEFAULT nextval('sync_seq'),
+  PRIMARY KEY (user_id, uid)
+);
+CREATE INDEX IF NOT EXISTS idx_expenses_seq ON expenses(user_id, seq);

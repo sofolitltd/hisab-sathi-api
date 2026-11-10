@@ -18,7 +18,7 @@ func (h *Handler) push(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ভুল অনুরোধ"})
 		return
 	}
-	if len(in.Customers)+len(in.Entries)+len(in.Logs) > 5000 {
+	if len(in.Customers)+len(in.Entries)+len(in.Logs)+len(in.Products)+len(in.Sales)+len(in.Purchases)+len(in.Expenses) > 5000 {
 		c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "একবারে অনেক বেশি রেকর্ড"})
 		return
 	}
@@ -110,6 +110,94 @@ func (h *Handler) push(c *gin.Context) {
 			  seq = nextval('sync_seq')
 			WHERE contact_logs.updated_at <= EXCLUDED.updated_at`,
 			user, r.UID, r.CustomerUID, r.Kind, r.Note, r.At, r.UpdatedAt, r.Deleted)
+		if err != nil {
+			log.Println("push:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "সার্ভারে সমস্যা"})
+			return
+		}
+	}
+	for _, r := range in.Products {
+		if r.UID == "" || r.Name == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "প্রোডাক্টের তথ্য ভুল"})
+			return
+		}
+		_, err = tx.Exec(c, `
+			INSERT INTO products (user_id, uid, name, buy_price, sell_price, unit, updated_at, deleted)
+			VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+			ON CONFLICT (user_id, uid) DO UPDATE SET
+			  name = EXCLUDED.name, buy_price = EXCLUDED.buy_price, sell_price = EXCLUDED.sell_price,
+			  unit = EXCLUDED.unit, updated_at = EXCLUDED.updated_at, deleted = EXCLUDED.deleted,
+			  seq = nextval('sync_seq')
+			WHERE products.updated_at <= EXCLUDED.updated_at`,
+			user, r.UID, r.Name, r.BuyPrice, r.SellPrice, r.Unit, r.UpdatedAt, r.Deleted)
+		if err != nil {
+			log.Println("push:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "সার্ভারে সমস্যা"})
+			return
+		}
+	}
+	for _, r := range in.Sales {
+		// ProductUID ফাঁকা থাকতে পারে — ইচ্ছাকৃতভাবে কোনো সেভড প্রোডাক্টের সাথে
+		// link না থাকলে (শুধু ফ্রি-টেক্সট নাম)।
+		if r.UID == "" || r.Quantity <= 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "বিক্রয়ের তথ্য ভুল"})
+			return
+		}
+		_, err = tx.Exec(c, `
+			INSERT INTO sales (user_id, uid, product_uid, product_name, unit_buy_price, unit_sell_price,
+			  quantity, customer_uid, received_amount, discount, date, note, profit, updated_at, deleted)
+			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+			ON CONFLICT (user_id, uid) DO UPDATE SET
+			  product_uid = EXCLUDED.product_uid, product_name = EXCLUDED.product_name,
+			  unit_buy_price = EXCLUDED.unit_buy_price, unit_sell_price = EXCLUDED.unit_sell_price,
+			  quantity = EXCLUDED.quantity, customer_uid = EXCLUDED.customer_uid,
+			  received_amount = EXCLUDED.received_amount, discount = EXCLUDED.discount,
+			  date = EXCLUDED.date, note = EXCLUDED.note,
+			  profit = EXCLUDED.profit,
+			  updated_at = EXCLUDED.updated_at, deleted = EXCLUDED.deleted, seq = nextval('sync_seq')
+			WHERE sales.updated_at <= EXCLUDED.updated_at`,
+			user, r.UID, r.ProductUID, r.ProductName, r.UnitBuyPrice, r.UnitSellPrice,
+			r.Quantity, r.CustomerUID, r.ReceivedAmount, r.Discount, r.Date, r.Note, r.Profit, r.UpdatedAt, r.Deleted)
+		if err != nil {
+			log.Println("push:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "সার্ভারে সমস্যা"})
+			return
+		}
+	}
+	for _, r := range in.Purchases {
+		if r.UID == "" || r.ProductUID == "" || r.Quantity <= 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "ক্রয়ের তথ্য ভুল"})
+			return
+		}
+		_, err = tx.Exec(c, `
+			INSERT INTO purchases (user_id, uid, product_uid, quantity, unit_cost, date, note, updated_at, deleted)
+			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+			ON CONFLICT (user_id, uid) DO UPDATE SET
+			  product_uid = EXCLUDED.product_uid, quantity = EXCLUDED.quantity, unit_cost = EXCLUDED.unit_cost,
+			  date = EXCLUDED.date, note = EXCLUDED.note, updated_at = EXCLUDED.updated_at,
+			  deleted = EXCLUDED.deleted, seq = nextval('sync_seq')
+			WHERE purchases.updated_at <= EXCLUDED.updated_at`,
+			user, r.UID, r.ProductUID, r.Quantity, r.UnitCost, r.Date, r.Note, r.UpdatedAt, r.Deleted)
+		if err != nil {
+			log.Println("push:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "সার্ভারে সমস্যা"})
+			return
+		}
+	}
+	for _, r := range in.Expenses {
+		if r.UID == "" || r.Category == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "ব্যয়ের তথ্য ভুল"})
+			return
+		}
+		_, err = tx.Exec(c, `
+			INSERT INTO expenses (user_id, uid, category, amount, date, note, updated_at, deleted)
+			VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+			ON CONFLICT (user_id, uid) DO UPDATE SET
+			  category = EXCLUDED.category, amount = EXCLUDED.amount, date = EXCLUDED.date,
+			  note = EXCLUDED.note, updated_at = EXCLUDED.updated_at,
+			  deleted = EXCLUDED.deleted, seq = nextval('sync_seq')
+			WHERE expenses.updated_at <= EXCLUDED.updated_at`,
+			user, r.UID, r.Category, r.Amount, r.Date, r.Note, r.UpdatedAt, r.Deleted)
 		if err != nil {
 			log.Println("push:", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "সার্ভারে সমস্যা"})
